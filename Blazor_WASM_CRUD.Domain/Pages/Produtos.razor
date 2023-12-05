@@ -124,8 +124,7 @@ else
 
         if (_product?.Id == 0)
         {
-            try
-            {
+          
 
 
                 var request = new RestRequest($"{Configuration.ApiUrl}/v1/produtos")
@@ -138,12 +137,7 @@ else
                     _products?.Add(produto);
                     _products = new();
                 }
-            }
-            catch (Exception ex)
-            {
-
-                var mensagem = ex.Message;
-            }
+       
         }
         else
         {
