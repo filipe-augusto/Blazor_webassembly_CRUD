@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-namespace Blazor_WASM_CRUD.Domain.Models
+﻿namespace Blazor_WASM_CRUD.Domain.Models
 {
     public class Product
     {

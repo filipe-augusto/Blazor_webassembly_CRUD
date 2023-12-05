@@ -80,6 +80,39 @@ namespace Blazor_WASM_CRUD.API.Controllers
                 return StatusCode(500, new ResultViewModel<Product>("POST_PRODUCT_SERVER Falha interna no servidor"));
             }
         }
+        [HttpPost("v1/produtos2")]
+        public async Task<IActionResult> Post2([FromServices] AppDbContext context, Product model)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(new ResultViewModel<Product>(ModelState.GetErros()));
+                var JaProdutoJaExiste = context.Products.Count(x => x.Title == model.Title && x.CategoryId == model.CategoryId) > 0;
+                if (JaProdutoJaExiste)
+                    return NotFound(new ResultViewModel<Product>("Já existe um produto com esse nome."));
+
+                var produto = new Product();
+                produto.Title = model.Title;
+                produto.Price = model.Price;
+                produto.CategoryId = model.CategoryId;
+
+
+                await context.AddAsync(produto);
+                await context.SaveChangesAsync();
+                return Created($"v1/produtos/{produto.Id}", new ResultViewModel<Product>(produto));
+            }
+            catch (DbUpdateException ex)
+            {
+                return StatusCode(500, new ResultViewModel<Product>("POST_PRODUCT - Não foi possivel adicionar um novo registro."));
+            }
+            catch
+            {
+                return StatusCode(500, new ResultViewModel<Product>("POST_PRODUCT_SERVER Falha interna no servidor"));
+            }
+        }
+
+
+
 
         [HttpPut("v1/produtos/{id}")]
         public async Task<IActionResult> Put([FromServices] AppDbContext context, [FromBody] ProductViewModel model,

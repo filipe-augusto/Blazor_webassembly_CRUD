@@ -1,10 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
-namespace Blazor_WASM_CRUD.API.Models
+
+namespace Blazor_WASM_CRUD.Domain.Models
 {
-    public class Product
+    public class ProductViewModel
     {
-     
-        public int Id { get; set; }
+
 
         [Required(ErrorMessage = "Título é obrigatório")]
         [MaxLength(150, ErrorMessage = "Título deve ter no máximo 150 caracteres")]
@@ -20,6 +20,6 @@ namespace Blazor_WASM_CRUD.API.Models
         [Range(1, 9999, ErrorMessage = "Categoria deve estar entre 1 e 9999")]
         public int CategoryId { get; set; }
 
-        public Category Cate { get; set; } = null!;
     }
+
 }

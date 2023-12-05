@@ -1,0 +1,188 @@
+﻿@page "/produtos"
+@using Blazor_WASM_CRUD.Domain.Models
+@using RestSharp
+<PageTitle>Produtos</PageTitle>
+
+@if (_products == null)
+{
+    <p><em>Loading</em></p>
+}
+
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Price</th>
+                <th>Categoria</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in _products)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@item.Title</td>
+                    <td>@item.Price</td>
+                    <td>@item.CategoryId</td>
+                    <td>
+                        <button class="btn btn-info" @onclick="() => GetAsync(item.Id)">
+                            EDIT
+                        </button>
+                    </td>
+
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+<hr>
+<input type="hidden" class="form-control" @bind="_product.Id" />
+<div class="mb-3">
+    <label class="form-label">Title</label>
+    <input type="text" class="form-control" @bind="_product.Title" />
+</div>
+<div class="mb-3">
+    <label class="form-label">Price</label>
+    <input type="text" class="form-control" @bind="_product.Price" />
+</div>
+<div class="mb-3">
+    <label for="CategoryId" class="form-label">Category</label>
+    <InputSelect id="categoryId" @bind-Value="_product.CategoryId" class="form-control">
+        @foreach (var category in categories)
+        {
+            <option value="@category.Id">@category.Title</option>
+        }
+    </InputSelect>
+</div>
+@if (_deleted)
+{
+
+    <div class="alert alert-danger" role="alert">
+        Categoria excluída com sucesso!
+    </div>
+}
+
+<button class="btn btn-primary" @onclick="UpsertAsync">
+    @if (_product.Id is not 0)
+    {
+        <span>SAVE</span>
+    }
+    else
+    {
+        <span>CREATE</span>
+    }
+</button>
+@if (_product.Id is not 0)
+{
+    <button class="btn btn-info" @onclick="New">NEW</button>
+}
+@if (_product.Id != 0)
+{
+    <button class="btn btn-danger" @onclick="DeleteAsync">DELETE</button>
+}
+
+<br>
+<br>
+<br>
+
+
+@code {
+    private bool _deleted;
+    private List<Product>? _products;
+    private Product? _product = new();
+    private List<Category> categories = new();
+    protected override async Task OnInitializedAsync()
+    {
+
+        try
+        {
+            var cliente = new RestClient();
+            var request = new RestRequest($"{Configuration.ApiUrl}/v1/produtos");
+            _products = await cliente.GetAsync<List<Product>?>(request);
+           var cliente2 = new RestClient();
+            var request2 = new RestRequest($"{Configuration.ApiUrl}/v1/categories");
+            categories = await cliente2.GetAsync<List<Category>?>(request2);
+            _deleted = false;
+
+        }
+        catch (Exception ex)
+        {
+
+            var mensagem = ex.Message;
+        }
+
+    }
+
+
+    private async Task UpsertAsync()
+    {
+        var client = new RestClient();
+
+        if (_product?.Id == 0)
+        {
+            try
+            {
+
+
+                var request = new RestRequest($"{Configuration.ApiUrl}/v1/produtos")
+                    .AddJsonBody(_products);
+
+                var produto = await client.PostAsync<Product>(request);
+
+                if (produto is not null)
+                {
+                    _products?.Add(produto);
+                    _products = new();
+                }
+            }
+            catch (Exception ex)
+            {
+
+                var mensagem = ex.Message;
+            }
+        }
+        else
+        {
+            var request = new RestRequest($"{Configuration.ApiUrl}/v1/produtos/{_product?.Id}")
+                .AddJsonBody(_products);
+            await client.PutAsync<Product?>(request);
+
+            var category = _products?
+                .FirstOrDefault(x => x.Id == _product?.Id);
+            if (category is not null)
+            {
+                category.Title = _product.Title;
+
+            }
+        }
+
+        _deleted = false;
+    }
+
+    public async Task GetAsync(int id)
+    {
+        var client = new RestClient();
+        var request = new RestRequest($"{Configuration.ApiUrl}/v1/produtos/{id}");
+        _product = await client.GetAsync<Product?>(request);
+        _deleted = false;
+    }
+
+    public async Task DeleteAsync()
+    {
+        var client = new RestClient();
+        var request = new RestRequest($"{Configuration.ApiUrl}/v1/produtos/{_product?.Id}");
+        _product = await client.DeleteAsync<Product?>(request);
+        _deleted = true;
+    }
+
+    public void New()
+    {
+        _product = new();
+        _deleted = false;
+    }
+
+}
